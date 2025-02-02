@@ -28,8 +28,30 @@
         }
 
         .header {
+            position: relative;
             text-align: center;
             margin-bottom: 2rem;
+            padding: 1rem 0;
+        }
+
+        .header-nav {
+            position: absolute;
+            top: 1rem;
+            right: 0;
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .nav-link {
+            color: var(--text-primary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: opacity 0.2s ease;
+        }
+
+        .nav-link:hover {
+            opacity: 0.8;
+            text-decoration: underline;
         }
 
         .status-counter {
@@ -120,11 +142,22 @@
                 background: #374151;
             }
         }
+
+        @media (max-width: 600px) {
+            .header-nav {
+                position: static;
+                justify-content: flex-end;
+                margin-bottom: 1rem;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
+            <nav class="header-nav">
+                <a href="/about" class="nav-link">About</a>
+            </nav>
             <h1>U.S. Government Services Status</h1>
             <p>Automatically updates every 5 minutes</p>
             <div id="status-counter" class="status-counter">
@@ -148,8 +181,7 @@ const TOP_GOV_SITES = [
     'visitthecapitol.gov', 'vote.gov', 'data.gov', 'performance.gov'
 ];
 
-// Replace with your serverless function URL
-const STATUS_API = 'https://gov-status-tracker.vercel.app/api/check?url=';
+const STATUS_API = 'https://your-status-checker.vercel.app/api/check?url=';
 
 let onlineCount = 0;
 const totalSites = TOP_GOV_SITES.length;
