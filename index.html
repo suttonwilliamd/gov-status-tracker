@@ -32,6 +32,17 @@
             margin-bottom: 2rem;
         }
 
+        .status-counter {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 1rem 0;
+            color: var(--text-primary);
+        }
+
+        .status-counter span {
+            color: var(--online);
+        }
+
         .status-card {
             background: white;
             border-radius: 0.5rem;
@@ -116,12 +127,14 @@
         <div class="header">
             <h1>U.S. Government Services Status</h1>
             <p>Automatically updates every 5 minutes</p>
+            <div id="status-counter" class="status-counter">
+                <span id="online-count">0</span>/<span id="total-count">0</span> services online
+            </div>
         </div>
         <div id="status-list"></div>
     </div>
 
 <script>
-// Curated list of major .gov domains
 const TOP_GOV_SITES = [
     'usa.gov', 'whitehouse.gov', 'nih.gov', 'nsf.gov', 'nasa.gov',
     'census.gov', 'irs.gov', 'ssa.gov', 'usajobs.gov', 'weather.gov',
@@ -137,6 +150,14 @@ const TOP_GOV_SITES = [
 
 // Replace with your serverless function URL
 const STATUS_API = 'https://gov-status-tracker.vercel.app/api/check?url=';
+
+let onlineCount = 0;
+const totalSites = TOP_GOV_SITES.length;
+
+function updateCounter() {
+    document.getElementById('online-count').textContent = onlineCount;
+    document.getElementById('total-count').textContent = totalSites;
+}
 
 function createStatusCard(domain) {
     const card = document.createElement('a');
@@ -187,11 +208,13 @@ async function checkDomainStatus(domain) {
 
 async function updateStatus() {
     const container = document.getElementById('status-list');
+    onlineCount = 0;
     
     if (!container.children.length) {
         TOP_GOV_SITES.forEach(domain => {
             container.appendChild(createStatusCard(domain));
         });
+        updateCounter();
     }
 
     Array.from(container.children).forEach(async (card, index) => {
@@ -213,16 +236,21 @@ async function updateStatus() {
             indicator.classList.add(isOnline ? 'online' : 'offline');
             timestamp.textContent = new Date().toLocaleTimeString();
 
+            if (isOnline) onlineCount++;
+            updateCounter();
+
         } catch (error) {
             card.href = '#';
             indicator.classList.remove('checking');
             indicator.classList.add('offline');
             timestamp.textContent = 'Check failed';
+            updateCounter();
         }
     });
 }
 
 // Initial load
+updateCounter();
 updateStatus();
 setInterval(updateStatus, 5 * 60 * 1000);
 </script>
