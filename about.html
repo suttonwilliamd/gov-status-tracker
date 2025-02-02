@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About - Government Services Monitor</title>
+    <style>
+        :root {
+            --primary: #1a73e8;
+            --background: #F3F4F6;
+            --text-primary: #1F2937;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            margin: 0;
+            padding: 2rem;
+            background: var(--background);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .nav {
+            text-align: right;
+            margin-bottom: 2rem;
+        }
+
+        .nav a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .content {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .donation-section {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .donate-button {
+            display: inline-block;
+            background: var(--primary);
+            color: white !important;
+            padding: 0.8rem 1.5rem;
+            border-radius: 6px;
+            text-decoration: none;
+            margin-top: 1rem;
+            transition: transform 0.1s ease;
+        }
+
+        .donate-button:hover {
+            transform: translateY(-2px);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --background: #1F2937;
+                --text-primary: #F9FAFB;
+            }
+            
+            .content {
+                background: #374151;
+            }
+            
+            .donation-section {
+                background: #2d3748;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav class="nav">
+            <a href="/">← Back to Status Monitor</a>
+        </nav>
+
+        <div class="content">
+            <h1>About This Project</h1>
+            
+            <p><strong>Honest disclosure:</strong> I'm currently experiencing homelessness while working on this project. I used DeepSeek-R1 to help build this service status monitor in under an hour. While the AI assisted with the technical implementation, the vision and final execution are my own.</p>
+
+            <h2>Why I Built This</h2>
+            <p>As someone without stable housing, reliable access to government services is crucial. This project helps everyone quickly verify the status of essential .gov websites. Transparency in public services benefits us all.</p>
+
+            <div class="donation-section">
+                <h3>Support My Work</h3>
+                <p>If you find this tool valuable and would like to support my efforts to continue developing useful tools:</p>
+                <a href="https://ko-fi.com/yourusername" class="donate-button" target="_blank" rel="noopener">
+                    Buy Me a Meal 🍲
+                </a>
+                <p style="margin-top: 1rem; font-size: 0.9rem;">
+                    (Completely optional - the service remains free for everyone)
+                </p>
+            </div>
+
+            <h2>Technical Details</h2>
+            <p>This project uses:</p>
+            <ul>
+                <li>GitHub Pages for hosting</li>
+                <li>Vercel serverless functions for status checks</li>
+                <li>Public .gov domain listings from official sources</li>
+                <li>Modern web technologies (HTML5, CSS3, JavaScript ES6)</li>
+            </ul>
+
+            <p>While my circumstances are challenging, I believe in creating tools that serve the public good. Thank you for your understanding and support.</p>
+        </div>
+    </div>
+</body>
+</html>
