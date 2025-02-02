@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>.Gov Status Tracker</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { font-family: Arial, sans-serif; padding: 15px; }
+        .status { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+        .online { background: #4CAF50; }
+        .offline { background: #f44336; }
+        .domain { word-break: break-all; }
+    </style>
+</head>
+<body>
+    <h1>.Gov Status Monitor</h1>
+    <input type="text" id="search" placeholder="Search domains..." style="width:100%; padding:8px; margin-bottom:15px;">
+    <div id="loader">Loading...</div>
+    <div id="list"></div>
+
+    <script>
+        // Use free CORS proxy
+        const CORS_PROXY = "https://corsproxy.io/?"
+        
+        // Data source
+        const GOV_LIST_URL = "https://raw.githubusercontent.com/GSA/data/master/dotgov-domains/current-federal.csv"
+
+        // Simple cache using localStorage
+        let cache = {
+            get: (key) => JSON.parse(localStorage.getItem(key)),
+            set: (key, value) => localStorage.setItem(key, JSON.stringify(value))
+        }
+
+        async function fetchDomains() {
+            let cached = cache.get('govDomains')
+            if (cached) return cached
+            
+            try {
+                const response = await fetch(CORS_PROXY + GOV_LIST_URL)
+                const text = await response.text()
+                const domains = text.split('\n').slice(1).map(row => {
+                    const [domain, agency, org] = row.split(',')
+                    return { domain, agency, org }
+                })
+                cache.set('govDomains', domains)
+                return domains
+            } catch (e) {
+                return []
+            }
+        }
+
+        async function checkStatus(domain) {
+            try {
+                const response = await fetch(CORS_PROXY + `https://${domain}/`, {
+                    method: 'HEAD',
+                    redirect: 'follow',
+                    cache: 'no-cache'
+                })
+                return response.ok
+            } catch (e) {
+                return false
+            }
+        }
+
+        async function updateList() {
+            const loader = document.getElementById('loader')
+            const list = document.getElementById('list')
+            const search = document.getElementById('search').value.toLowerCase()
+            
+            loader.textContent = "Loading domains..."
+            const domains = await fetchDomains()
+            
+            loader.textContent = "Checking statuses..."
+            list.innerHTML = ''
+            
+            for(const { domain, agency, org } of domains) {
+                if(search && !domain.toLowerCase().includes(search)) continue
+                
+                const item = document.createElement('div')
+                item.style.padding = '10px'
+                item.style.borderBottom = '1px solid #eee'
+                item.innerHTML = `
+                    <div class="domain">${domain}</div>
+                    <small>${agency || ''} • ${org || ''}</small>
+                    <div class="status"></div>
+                `
+                
+                list.appendChild(item)
+                
+                // Check status
+                checkStatus(domain).then(online => {
+                    item.querySelector('.status').className = `status ${online ? 'online' : 'offline'}`
+                })
+            }
+            
+            loader.textContent = domains.length ? "" : "No domains found"
+        }
+
+        // Initial load
+        updateList()
+        
+        // Refresh every 60 seconds
+        setInterval(updateList, 60000)
+        
+        // Search input
+        document.getElementById('search').addEventListener('input', updateList)
+    </script>
+</body>
+</html>
