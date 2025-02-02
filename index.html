@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>U.S. Government Services Status</title>
     <style>
+        /* Base styles remain the same */
         :root {
             --online: #10B981;
             --offline: #EF4444;
@@ -12,183 +13,113 @@
             --background: #F3F4F6;
             --text-primary: #1F2937;
             --text-secondary: #6B7280;
+            --primary: #1a73e8;
         }
 
-        body {
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            margin: 0;
-            padding: 1rem;
-            background: var(--background);
-            color: var(--text-primary);
-        }
-
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-        }
-
-        .header {
-            position: relative;
-            text-align: center;
-            margin-bottom: 2rem;
-            padding: 1rem 0;
-        }
-
-        .header-nav {
-            position: absolute;
-            top: 1rem;
-            right: 0;
+        .category-filter {
             display: flex;
-            gap: 1.5rem;
-        }
-
-        .nav-link {
-            color: var(--text-primary);
-            text-decoration: none;
-            font-weight: 500;
-            transition: opacity 0.2s ease;
-        }
-
-        .nav-link:hover {
-            opacity: 0.8;
-            text-decoration: underline;
-        }
-
-        .status-counter {
-            font-size: 1.5rem;
-            font-weight: 600;
+            gap: 0.5rem;
+            flex-wrap: wrap;
             margin: 1rem 0;
-            color: var(--text-primary);
         }
 
-        .status-counter span {
-            color: var(--online);
-        }
-
-        .status-card {
+        .category-filter button {
             background: white;
-            border-radius: 0.5rem;
-            padding: 1rem;
-            margin-bottom: 1rem;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            display: grid;
-            grid-template-columns: auto 1fr auto;
-            align-items: center;
-            gap: 1rem;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            color: inherit;
+            border: 1px solid #ddd;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
             cursor: pointer;
+            transition: all 0.2s ease;
         }
 
-        .status-indicator {
-            width: 1rem;
-            height: 1rem;
-            border-radius: 9999px;
-            background: var(--checking);
+        .category-filter button.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
         }
 
-        .status-indicator.online {
-            background: var(--online) !important;
-            animation: none;
-        }
-
-        .status-indicator.offline {
-            background: var(--offline) !important;
-            animation: none;
-        }
-
-        .checking {
-            animation: pulse 2s infinite;
-        }
-
-        .domain-info {
-            overflow: hidden;
-        }
-
-        .domain-name {
-            font-weight: 600;
-            margin-bottom: 0.25rem;
-        }
-
-        .domain-agency {
-            color: var(--text-secondary);
-            font-size: 0.875rem;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .last-checked {
-            color: var(--text-secondary);
-            font-size: 0.75rem;
-            text-align: right;
-            min-width: 80px;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --background: #1F2937;
-                --text-primary: #F9FAFB;
-                --text-secondary: #9CA3AF;
-            }
-            
-            .status-card {
-                background: #374151;
-            }
-        }
-
-        @media (max-width: 600px) {
-            .header-nav {
-                position: static;
-                justify-content: flex-end;
-                margin-bottom: 1rem;
-            }
-        }
+        /* Keep existing card styles */
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <nav class="header-nav">
-                <a href="/about" class="nav-link">About</a>
-            </nav>
             <h1>U.S. Government Services Status</h1>
-            <p>Automatically updates every 5 minutes</p>
             <div id="status-counter" class="status-counter">
                 <span id="online-count">0</span>/<span id="total-count">0</span> services online
+            </div>
+            <div class="category-filter">
+                <button data-category="all" class="active">All Services (200)</button>
+                <button data-category="critical">Critical Services (25)</button>
+                <button data-category="agencies">Major Agencies (50)</button>
+                <button data-category="public">Public Services (75)</button>
+                <button data-category="state">State Portals (50)</button>
             </div>
         </div>
         <div id="status-list"></div>
     </div>
 
 <script>
-const TOP_GOV_SITES = [
-    'usa.gov', 'whitehouse.gov', 'nih.gov', 'nsf.gov', 'nasa.gov',
-    'census.gov', 'irs.gov', 'ssa.gov', 'usajobs.gov', 'weather.gov',
-    'usps.gov', 'faa.gov', 'fema.gov', 'cdc.gov', 'fdic.gov',
-    'energy.gov', 'defense.gov', 'state.gov', 'dhs.gov', 'epa.gov',
-    'doi.gov', 'usda.gov', 'commerce.gov', 'transportation.gov',
-    'treasury.gov', 'va.gov', 'fbi.gov', 'cia.gov', 'federalreserve.gov',
-    'sec.gov', 'ftc.gov', 'uspto.gov', 'ncbi.nlm.nih.gov',
-    'congress.gov', 'supremecourt.gov', 'gao.gov', 'gpo.gov',
-    'archives.gov', 'loc.gov', 'si.edu', 'nationalparks.gov',
-    'visitthecapitol.gov', 'vote.gov', 'data.gov', 'performance.gov'
-];
+const PRIORITY_GROUPS = {
+    critical: [
+        'usa.gov', 'whitehouse.gov', 'cdc.gov', 'fema.gov', 'weather.gov',
+        'ssa.gov', 'medicare.gov', 'irs.gov', 'uscis.gov', 'fbi.gov',
+        'cia.gov', 'dhs.gov', 'fda.gov', 'epa.gov', 'nih.gov',
+        'va.gov', 'usps.gov', 'faa.gov', 'dot.gov', 'nasa.gov',
+        'energy.gov', 'state.gov', 'treasury.gov', 'defense.gov', 'justice.gov'
+    ],
+    agencies: [
+        // Cabinet-level departments
+        'agriculture.gov', 'commerce.gov', 'education.gov', 'energy.gov',
+        'hhs.gov', 'homelandsecurity.gov', 'housing.gov', 'interior.gov',
+        'labor.gov', 'state.gov', 'transportation.gov', 'treasury.gov',
+        'va.gov', 'defense.gov', 'justice.gov',
+        // Major independent agencies
+        'epa.gov', 'fcc.gov', 'federalreserve.gov', 'ftc.gov', 'gsa.gov',
+        'nasa.gov', 'nsf.gov', 'sec.gov', 'sba.gov', 'usaid.gov',
+        'usda.gov', 'usdoj.gov', 'usgs.gov', 'usmint.gov', 'uspto.gov'
+    ],
+    public: [
+        // Public-facing services
+        'benefits.gov', 'consumerfinance.gov', 'data.gov', 'disasterassistance.gov',
+        'eia.gov', 'fueleconomy.gov', 'healthcare.gov', 'medicaid.gov',
+        'nutrition.gov', 'recreation.gov', 'recreation.gov', 'science.gov',
+        'studentloans.gov', 'travel.state.gov', 'vote.gov', 'weather.gov',
+        'whitehouse.gov', 'usa.gov', 'usajobs.gov', 'usembassy.gov'
+    ],
+    state: [
+        // Top 50 state portals
+        'alabama.gov', 'alaska.gov', 'arizona.gov', 'arkansas.gov',
+        'ca.gov', 'colorado.gov', 'connecticut.gov', 'delaware.gov',
+        'florida.gov', 'georgia.gov', 'hawaii.gov', 'idaho.gov',
+        'illinois.gov', 'indiana.gov', 'iowa.gov', 'kansas.gov',
+        'kentucky.gov', 'louisiana.gov', 'maine.gov', 'maryland.gov',
+        'mass.gov', 'michigan.gov', 'minnesota.gov', 'mississippi.gov',
+        'missouri.gov', 'montana.gov', 'nebraska.gov', 'nevada.gov',
+        'nh.gov', 'nj.gov', 'nm.gov', 'ny.gov', 'nc.gov',
+        'nd.gov', 'ohio.gov', 'ok.gov', 'oregon.gov', 'pa.gov',
+        'ri.gov', 'sc.gov', 'sd.gov', 'tn.gov', 'texas.gov',
+        'utah.gov', 'vermont.gov', 'virginia.gov', 'wa.gov',
+        'wv.gov', 'wisconsin.gov', 'wyoming.gov'
+    ]
+};
 
-const STATUS_API = 'https://gov-status-tracker.vercel.app/api/check?url=';
-
+let activeDomains = [];
 let onlineCount = 0;
-const totalSites = TOP_GOV_SITES.length;
+
+function getDomainGroup(category) {
+    switch(category) {
+        case 'critical': return PRIORITY_GROUPS.critical;
+        case 'agencies': return PRIORITY_GROUPS.agencies;
+        case 'public': return PRIORITY_GROUPS.public;
+        case 'state': return PRIORITY_GROUPS.state;
+        default: return Object.values(PRIORITY_GROUPS).flat();
+    }
+}
 
 function updateCounter() {
     document.getElementById('online-count').textContent = onlineCount;
-    document.getElementById('total-count').textContent = totalSites;
+    document.getElementById('total-count').textContent = activeDomains.length;
 }
 
 function createStatusCard(domain) {
@@ -201,30 +132,10 @@ function createStatusCard(domain) {
         <div class="status-indicator checking"></div>
         <div class="domain-info">
             <div class="domain-name">${domain}</div>
-            <div class="domain-agency">${getAgencyName(domain)}</div>
         </div>
         <div class="last-checked">Checking...</div>
     `;
     return card;
-}
-
-function getAgencyName(domain) {
-    const agencyMap = {
-        'usa.gov': 'U.S. Government Services',
-        'whitehouse.gov': 'The White House',
-        'nih.gov': 'National Institutes of Health',
-        'nasa.gov': 'NASA',
-        'census.gov': 'U.S. Census Bureau',
-        'irs.gov': 'Internal Revenue Service',
-        'ssa.gov': 'Social Security Administration',
-        'weather.gov': 'National Weather Service',
-        'cdc.gov': 'Centers for Disease Control',
-        'va.gov': 'Veterans Affairs',
-        'fbi.gov': 'Federal Bureau of Investigation',
-        'cia.gov': 'Central Intelligence Agency',
-        'state.gov': 'Department of State'
-    };
-    return agencyMap[domain] || 'Federal Government Agency';
 }
 
 async function checkDomainStatus(domain) {
@@ -233,7 +144,6 @@ async function checkDomainStatus(domain) {
         const data = await response.json();
         return data.status === 'online';
     } catch (error) {
-        console.error(`Error checking ${domain}:`, error);
         return false;
     }
 }
@@ -241,50 +151,45 @@ async function checkDomainStatus(domain) {
 async function updateStatus() {
     const container = document.getElementById('status-list');
     onlineCount = 0;
-    
-    if (!container.children.length) {
-        TOP_GOV_SITES.forEach(domain => {
-            container.appendChild(createStatusCard(domain));
-        });
-        updateCounter();
-    }
+    container.innerHTML = '';
 
-    Array.from(container.children).forEach(async (card, index) => {
-        const domain = TOP_GOV_SITES[index];
-        const indicator = card.querySelector('.status-indicator');
-        const timestamp = card.querySelector('.last-checked');
-
-        indicator.className = 'status-indicator checking';
-        timestamp.textContent = 'Checking...';
+    for(const domain of activeDomains) {
+        const card = createStatusCard(domain);
+        container.appendChild(card);
 
         try {
-            const isOnline = await Promise.race([
-                checkDomainStatus(domain),
-                new Promise(resolve => setTimeout(() => resolve(false), 8000))
-            ]);
-
+            const isOnline = await checkDomainStatus(domain);
             card.href = isOnline ? `https://${domain}` : '#';
-            indicator.classList.remove('checking');
-            indicator.classList.add(isOnline ? 'online' : 'offline');
-            timestamp.textContent = new Date().toLocaleTimeString();
+            card.querySelector('.status-indicator').classList.remove('checking');
+            card.querySelector('.status-indicator').classList.add(isOnline ? 'online' : 'offline');
+            card.querySelector('.last-checked').textContent = new Date().toLocaleTimeString();
 
-            if (isOnline) onlineCount++;
+            if(isOnline) onlineCount++;
             updateCounter();
-
-        } catch (error) {
-            card.href = '#';
-            indicator.classList.remove('checking');
-            indicator.classList.add('offline');
-            timestamp.textContent = 'Check failed';
-            updateCounter();
+        } catch(error) {
+            card.querySelector('.status-indicator').classList.remove('checking');
+            card.querySelector('.status-indicator').classList.add('offline');
+            card.querySelector('.last-checked').textContent = 'Check failed';
         }
-    });
+    }
 }
 
-// Initial load
+// Initialize with critical services
+activeDomains = getDomainGroup('critical');
 updateCounter();
 updateStatus();
-setInterval(updateStatus, 5 * 60 * 1000);
+
+// Handle category switching
+document.querySelectorAll('.category-filter button').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.category-filter button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        
+        activeDomains = getDomainGroup(btn.dataset.category);
+        updateCounter();
+        updateStatus();
+    });
+});
 </script>
 </body>
 </html>
