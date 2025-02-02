@@ -43,6 +43,9 @@
             align-items: center;
             gap: 1rem;
             transition: all 0.3s ease;
+            text-decoration: none;
+            color: inherit;
+            cursor: pointer;
         }
 
         .status-indicator {
@@ -132,23 +135,15 @@ const TOP_GOV_SITES = [
     'visitthecapitol.gov', 'vote.gov', 'data.gov', 'performance.gov'
 ];
 
-// Replace with your Vercel/Netlify function URL
+// Replace with your serverless function URL
 const STATUS_API = 'https://gov-status-tracker.vercel.app/api/check?url=';
 
-async function checkDomainStatus(domain) {
-    try {
-        const response = await fetch(`${STATUS_API}${encodeURIComponent(domain)}`);
-        const data = await response.json();
-        return data.status === 'online';
-    } catch (error) {
-        console.error(`Error checking ${domain}:`, error);
-        return false;
-    }
-}
-
 function createStatusCard(domain) {
-    const card = document.createElement('div');
+    const card = document.createElement('a');
     card.className = 'status-card';
+    card.href = `https://${domain}`;
+    card.target = '_blank';
+    card.rel = 'noopener noreferrer';
     card.innerHTML = `
         <div class="status-indicator checking"></div>
         <div class="domain-info">
@@ -179,23 +174,31 @@ function getAgencyName(domain) {
     return agencyMap[domain] || 'Federal Government Agency';
 }
 
+async function checkDomainStatus(domain) {
+    try {
+        const response = await fetch(`${STATUS_API}${encodeURIComponent(domain)}`);
+        const data = await response.json();
+        return data.status === 'online';
+    } catch (error) {
+        console.error(`Error checking ${domain}:`, error);
+        return false;
+    }
+}
+
 async function updateStatus() {
     const container = document.getElementById('status-list');
     
-    // Initial render if empty
     if (!container.children.length) {
         TOP_GOV_SITES.forEach(domain => {
             container.appendChild(createStatusCard(domain));
         });
     }
 
-    // Update each card status
     Array.from(container.children).forEach(async (card, index) => {
         const domain = TOP_GOV_SITES[index];
         const indicator = card.querySelector('.status-indicator');
         const timestamp = card.querySelector('.last-checked');
 
-        // Reset to checking state
         indicator.className = 'status-indicator checking';
         timestamp.textContent = 'Checking...';
 
@@ -205,12 +208,13 @@ async function updateStatus() {
                 new Promise(resolve => setTimeout(() => resolve(false), 8000))
             ]);
 
-            // Update classes and status
+            card.href = isOnline ? `https://${domain}` : '#';
             indicator.classList.remove('checking');
             indicator.classList.add(isOnline ? 'online' : 'offline');
             timestamp.textContent = new Date().toLocaleTimeString();
 
         } catch (error) {
+            card.href = '#';
             indicator.classList.remove('checking');
             indicator.classList.add('offline');
             timestamp.textContent = 'Check failed';
@@ -220,7 +224,6 @@ async function updateStatus() {
 
 // Initial load
 updateStatus();
-// Refresh every 5 minutes
 setInterval(updateStatus, 5 * 60 * 1000);
 </script>
 </body>
