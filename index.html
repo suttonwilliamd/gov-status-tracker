@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>U.S. Government Services Status</title>
     <style>
-        /* Base styles remain the same */
         :root {
             --online: #10B981;
             --offline: #EF4444;
@@ -16,10 +15,39 @@
             --primary: #1a73e8;
         }
 
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            margin: 0;
+            padding: 1rem;
+            background: var(--background);
+            color: var(--text-primary);
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .status-counter {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 1rem 0;
+        }
+
+        .status-counter span {
+            color: var(--online);
+        }
+
         .category-filter {
             display: flex;
             gap: 0.5rem;
             flex-wrap: wrap;
+            justify-content: center;
             margin: 1rem 0;
         }
 
@@ -38,7 +66,68 @@
             border-color: var(--primary);
         }
 
-        /* Keep existing card styles */
+        .status-card {
+            background: white;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            align-items: center;
+            gap: 1rem;
+            text-decoration: none;
+            color: inherit;
+            cursor: pointer;
+        }
+
+        .status-indicator {
+            width: 1rem;
+            height: 1rem;
+            border-radius: 9999px;
+            background: var(--checking);
+        }
+
+        .status-indicator.online {
+            background: var(--online);
+            animation: none;
+        }
+
+        .status-indicator.offline {
+            background: var(--offline);
+            animation: none;
+        }
+
+        .checking {
+            animation: pulse 2s infinite;
+        }
+
+        .domain-name {
+            font-weight: 600;
+        }
+
+        .last-checked {
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            text-align: right;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --background: #1F2937;
+                --text-primary: #F9FAFB;
+                --text-secondary: #9CA3AF;
+            }
+            
+            .status-card {
+                background: #374151;
+            }
+        }
     </style>
 </head>
 <body>
@@ -49,80 +138,46 @@
                 <span id="online-count">0</span>/<span id="total-count">0</span> services online
             </div>
             <div class="category-filter">
-                <button data-category="all" class="active">All Services (200)</button>
-                <button data-category="critical">Critical Services (25)</button>
-                <button data-category="agencies">Major Agencies (50)</button>
-                <button data-category="public">Public Services (75)</button>
-                <button data-category="state">State Portals (50)</button>
+                <button data-category="all" class="active">All Services</button>
+                <button data-category="critical">Critical</button>
+                <button data-category="agencies">Agencies</button>
+                <button data-category="public">Public</button>
+                <button data-category="state">States</button>
             </div>
         </div>
         <div id="status-list"></div>
     </div>
 
 <script>
-const PRIORITY_GROUPS = {
+const DOMAINS = {
     critical: [
         'usa.gov', 'whitehouse.gov', 'cdc.gov', 'fema.gov', 'weather.gov',
-        'ssa.gov', 'medicare.gov', 'irs.gov', 'uscis.gov', 'fbi.gov',
-        'cia.gov', 'dhs.gov', 'fda.gov', 'epa.gov', 'nih.gov',
-        'va.gov', 'usps.gov', 'faa.gov', 'dot.gov', 'nasa.gov',
-        'energy.gov', 'state.gov', 'treasury.gov', 'defense.gov', 'justice.gov'
+        'ssa.gov', 'medicare.gov', 'irs.gov', 'uscis.gov', 'fbi.gov'
     ],
     agencies: [
-        // Cabinet-level departments
-        'agriculture.gov', 'commerce.gov', 'education.gov', 'energy.gov',
-        'hhs.gov', 'homelandsecurity.gov', 'housing.gov', 'interior.gov',
-        'labor.gov', 'state.gov', 'transportation.gov', 'treasury.gov',
-        'va.gov', 'defense.gov', 'justice.gov',
-        // Major independent agencies
-        'epa.gov', 'fcc.gov', 'federalreserve.gov', 'ftc.gov', 'gsa.gov',
-        'nasa.gov', 'nsf.gov', 'sec.gov', 'sba.gov', 'usaid.gov',
-        'usda.gov', 'usdoj.gov', 'usgs.gov', 'usmint.gov', 'uspto.gov'
+        'nasa.gov', 'nih.gov', 'nsf.gov', 'energy.gov', 'state.gov',
+        'defense.gov', 'justice.gov', 'treasury.gov', 'va.gov', 'usda.gov'
     ],
     public: [
-        // Public-facing services
-        'benefits.gov', 'consumerfinance.gov', 'data.gov', 'disasterassistance.gov',
-        'eia.gov', 'fueleconomy.gov', 'healthcare.gov', 'medicaid.gov',
-        'nutrition.gov', 'recreation.gov', 'recreation.gov', 'science.gov',
-        'studentloans.gov', 'travel.state.gov', 'vote.gov', 'weather.gov',
-        'whitehouse.gov', 'usa.gov', 'usajobs.gov', 'usembassy.gov'
+        'usps.gov', 'faa.gov', 'dot.gov', 'fdic.gov', 'sec.gov',
+        'ftc.gov', 'uspto.gov', 'congress.gov', 'supremecourt.gov'
     ],
     state: [
-        // Top 50 state portals
-        'alabama.gov', 'alaska.gov', 'arizona.gov', 'arkansas.gov',
-        'ca.gov', 'colorado.gov', 'connecticut.gov', 'delaware.gov',
-        'florida.gov', 'georgia.gov', 'hawaii.gov', 'idaho.gov',
-        'illinois.gov', 'indiana.gov', 'iowa.gov', 'kansas.gov',
-        'kentucky.gov', 'louisiana.gov', 'maine.gov', 'maryland.gov',
-        'mass.gov', 'michigan.gov', 'minnesota.gov', 'mississippi.gov',
-        'missouri.gov', 'montana.gov', 'nebraska.gov', 'nevada.gov',
-        'nh.gov', 'nj.gov', 'nm.gov', 'ny.gov', 'nc.gov',
-        'nd.gov', 'ohio.gov', 'ok.gov', 'oregon.gov', 'pa.gov',
-        'ri.gov', 'sc.gov', 'sd.gov', 'tn.gov', 'texas.gov',
-        'utah.gov', 'vermont.gov', 'virginia.gov', 'wa.gov',
-        'wv.gov', 'wisconsin.gov', 'wyoming.gov'
+        'ca.gov', 'tx.gov', 'fl.gov', 'ny.gov', 'pa.gov',
+        'il.gov', 'oh.gov', 'ga.gov', 'nc.gov', 'mi.gov'
     ]
 };
 
+const STATUS_API = 'https://gov-status-tracker.vercel.app/api/check?url=';
 let activeDomains = [];
 let onlineCount = 0;
-
-function getDomainGroup(category) {
-    switch(category) {
-        case 'critical': return PRIORITY_GROUPS.critical;
-        case 'agencies': return PRIORITY_GROUPS.agencies;
-        case 'public': return PRIORITY_GROUPS.public;
-        case 'state': return PRIORITY_GROUPS.state;
-        default: return Object.values(PRIORITY_GROUPS).flat();
-    }
-}
 
 function updateCounter() {
     document.getElementById('online-count').textContent = onlineCount;
     document.getElementById('total-count').textContent = activeDomains.length;
 }
 
-function createStatusCard(domain) {
+function createCard(domain) {
     const card = document.createElement('a');
     card.className = 'status-card';
     card.href = `https://${domain}`;
@@ -130,15 +185,13 @@ function createStatusCard(domain) {
     card.rel = 'noopener noreferrer';
     card.innerHTML = `
         <div class="status-indicator checking"></div>
-        <div class="domain-info">
-            <div class="domain-name">${domain}</div>
-        </div>
+        <div class="domain-name">${domain}</div>
         <div class="last-checked">Checking...</div>
     `;
     return card;
 }
 
-async function checkDomainStatus(domain) {
+async function checkStatus(domain) {
     try {
         const response = await fetch(`${STATUS_API}${encodeURIComponent(domain)}`);
         const data = await response.json();
@@ -154,11 +207,11 @@ async function updateStatus() {
     container.innerHTML = '';
 
     for(const domain of activeDomains) {
-        const card = createStatusCard(domain);
+        const card = createCard(domain);
         container.appendChild(card);
 
         try {
-            const isOnline = await checkDomainStatus(domain);
+            const isOnline = await checkStatus(domain);
             card.href = isOnline ? `https://${domain}` : '#';
             card.querySelector('.status-indicator').classList.remove('checking');
             card.querySelector('.status-indicator').classList.add(isOnline ? 'online' : 'offline');
@@ -174,20 +227,23 @@ async function updateStatus() {
     }
 }
 
-// Initialize with critical services
-activeDomains = getDomainGroup('critical');
-updateCounter();
-updateStatus();
+function setCategory(category) {
+    activeDomains = category === 'all' 
+        ? Object.values(DOMAINS).flat()
+        : DOMAINS[category];
+    updateCounter();
+    updateStatus();
+}
+
+// Initialize
+setCategory('all');
 
 // Handle category switching
 document.querySelectorAll('.category-filter button').forEach(btn => {
     btn.addEventListener('click', () => {
         document.querySelectorAll('.category-filter button').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        
-        activeDomains = getDomainGroup(btn.dataset.category);
-        updateCounter();
-        updateStatus();
+        setCategory(btn.dataset.category);
     });
 });
 </script>
