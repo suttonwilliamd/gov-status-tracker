@@ -1,16 +1,16 @@
 {
   "routes": [
     {
-      "src": "/about",
-      "dest": "/about.html",
-      "headers": {
-        "Cache-Control": "public, max-age=3600"
-      }
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
     },
     {
-      "src": "/(.*)",
-      "dest": "/index.html",
-      "status": 200
+      "src": "/about",
+      "dest": "/about.html"
+    },
+    {
+      "src": "/",
+      "dest": "/index.html"
     }
   ]
 }
