@@ -438,6 +438,8 @@ let onlineCount = 0;
 let statusChart = null;
 const STATUS_HISTORY = {};
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+SUPABASE_URL=your-supabase-url
+SUPABASE_KEY=your-supabase-anon-key
 
 // Initialize theme based on saved preference
 if (localStorage.getItem('darkMode') === 'true' || 
@@ -715,6 +717,146 @@ async function checkDomains() {
     loader.style.display = 'none';
 }
 
+// Add to your existing code
+async function updateDomainHistory() {
+  // Get all domains that need updating
+  const visibleDomains = Array.from(
+    document.querySelectorAll('.status-card')
+  ).map(card => card.dataset.domain);
+  
+  // Update each domain card with history data
+  for (const domain of visibleDomains) {
+    try {
+      const response = await fetch(`/api/get-history?domain=${encodeURIComponent(domain)}`);
+      const history = await response.json();
+      
+      if (history && history.length > 0) {
+        const card = document.querySelector(`.status-card[data-domain="${domain}"]`);
+        if (!card) continue;
+        
+        const latestEntry = history[0];
+        
+        // Update status indicator
+        card.querySelector('.status-indicator').className = 
+          `status-indicator ${latestEntry.status === 'online' ? 'online' : 'offline'}`;
+        
+        // Show downtime duration if applicable
+        if (latestEntry.status === 'offline' && latestEntry.downSince) {
+          const downSince = new Date(latestEntry.downSince);
+          const downtimeDuration = Date.now() - downSince;
+          
+          let infoEl = card.querySelector('.domain-description');
+          if (!infoEl) {
+            infoEl = document.createElement('div');
+            infoEl.className = 'domain-description';
+            card.querySelector('.status-details').appendChild(infoEl);
+          }
+          
+          infoEl.innerHTML = `Down for <strong>${getFormattedDowntime(downtimeDuration)}</strong>`;
+          infoEl.style.color = 'var(--offline)';
+        }
+      }
+    } catch (error) {
+      console.error(`Error updating history for ${domain}:`, error);
+    }
+  }
+}
+
+async function showDomainDetails(domain) {
+  const modal = document.getElementById('domain-modal');
+  modal.style.display = 'block';
+  document.getElementById('modal-domain').textContent = domain;
+  document.getElementById('modal-content').innerHTML = '<p>Loading data...</p>';
+  
+  try {
+    // Fetch recent history and aggregated data
+    const [historyResponse, statsResponse] = await Promise.all([
+      fetch(`/api/get-history?domain=${encodeURIComponent(domain)}`),
+      fetch(`/api/get-stats?domain=${encodeURIComponent(domain)}`)
+    ]);
+    
+    const history = await historyResponse.json();
+    const stats = await statsResponse.json();
+    
+    // Create uptime chart
+    const chartElement = document.createElement('canvas');
+    chartElement.id = 'domain-chart';
+    chartElement.height = 200;
+    
+    // Format history for display
+    let historyHTML = `
+      <div class="stats-summary">
+        <div class="stat">
+          <span class="stat-value">${stats.uptime30d.toFixed(2)}%</span>
+          <span class="stat-label">30-day Uptime</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value">${stats.outages30d}</span>
+          <span class="stat-label">Recent Outages</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value">${stats.currentStatus}</span>
+          <span class="stat-label">Current Status</span>
+        </div>
+      </div>
+      
+      <div style="margin: 2rem 0;">
+        <canvas id="domain-chart"></canvas>
+      </div>
+      
+      <h3>Recent Status Changes</h3>
+    `;
+    
+    if (history.length > 0) {
+      historyHTML += '<ul class="status-history">';
+      history.forEach(entry => {
+        const date = new Date(entry.timestamp).toLocaleString();
+        const statusClass = entry.status === 'online' ? 'online' : 'offline';
+        
+        historyHTML += `
+          <li class="status-entry">
+            <span class="status-dot ${statusClass}"></span>
+            <span class="status-change">${entry.status.toUpperCase()}</span>
+            <span class="status-time">${date}</span>
+          </li>
+        `;
+      });
+      historyHTML += '</ul>';
+    } else {
+      historyHTML += '<p>No recent status changes recorded.</p>';
+    }
+    
+    document.getElementById('modal-content').innerHTML = historyHTML;
+    
+    // Initialize chart
+    const ctx = document.getElementById('domain-chart').getContext('2d');
+    const chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: stats.dailyLabels,
+        datasets: [{
+          label: 'Daily Uptime %',
+          data: stats.dailyUptime,
+          borderColor: 'rgb(16, 185, 129)',
+          tension: 0.1
+        }]
+      },
+      options: {
+        scales: {
+          y: {
+            min: 0,
+            max: 100
+          }
+        }
+      }
+    });
+    
+  } catch (error) {
+    document.getElementById('modal-content').innerHTML = 
+      `<p>Error loading data: ${error.message}</p>`;
+  }
+}
+    
 function notifyStatusChange(domain, newStatus, oldStatus) {
     if (newStatus === oldStatus) return;
     
