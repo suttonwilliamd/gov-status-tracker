@@ -38,6 +38,9 @@
             position: absolute;
             top: 0;
             right: 0;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
         }
 
         .nav a {
@@ -45,6 +48,18 @@
             text-decoration: none;
             font-weight: 500;
             margin-left: 1.5rem;
+        }
+
+        #theme-toggle {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-primary);
+            padding: 0.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .status-counter {
@@ -62,7 +77,7 @@
             gap: 0.5rem;
             flex-wrap: wrap;
             justify-content: center;
-            margin: 2rem 0;
+            margin: 2rem 0 1rem;
         }
 
         .category-filter button {
@@ -80,6 +95,38 @@
             border-color: var(--primary);
         }
 
+        .search-container {
+            margin: 1rem 0 2rem;
+            display: flex;
+            justify-content: center;
+        }
+
+        #domain-search {
+            padding: 0.75rem 1rem;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            width: 100%;
+            max-width: 400px;
+            font-size: 1rem;
+        }
+
+        .progress-bar {
+            height: 4px;
+            background: #e2e8f0;
+            width: 100%;
+            max-width: 400px;
+            margin: 1rem auto;
+            border-radius: 9999px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: var(--primary);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
         .status-card {
             background: white;
             border-radius: 0.5rem;
@@ -93,6 +140,12 @@
             text-decoration: none;
             color: inherit;
             cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .status-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
 
         .status-indicator {
@@ -110,8 +163,23 @@
             background: var(--offline);
         }
 
+        .status-indicator.checking {
+            animation: pulse 1.5s infinite ease-in-out;
+        }
+
+        .status-details {
+            display: flex;
+            flex-direction: column;
+        }
+
         .domain-name {
             font-weight: 600;
+        }
+
+        .domain-description {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
         }
 
         .last-checked {
@@ -128,9 +196,70 @@
             display: none;
         }
 
+        .refresh-button {
+            position: absolute;
+            right: 0;
+            top: 40px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+
+        .chart-container {
+            width: 100%;
+            max-width: 400px;
+            margin: 2rem auto;
+        }
+
+        #status-chart {
+            width: 100%;
+            height: 200px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background: white;
+            margin: 15% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 600px;
+        }
+
+        .close {
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
+        }
+
+        .keyboard-hint {
+            margin-top: 0.5rem;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
         }
 
         @media (prefers-color-scheme: dark) {
@@ -148,12 +277,52 @@
                 background: #2d3748;
                 border-color: #4a5568;
             }
+
+            #domain-search {
+                background: #374151;
+                color: #F9FAFB;
+                border-color: #4a5568;
+            }
+
+            .modal-content {
+                background: #374151;
+            }
+        }
+
+        body.dark-mode {
+            --background: #1F2937;
+            --text-primary: #F9FAFB;
+            --text-secondary: #9CA3AF;
+        }
+        
+        body.dark-mode .status-card {
+            background: #374151;
+        }
+        
+        body.dark-mode .category-filter button {
+            background: #2d3748;
+            border-color: #4a5568;
+        }
+
+        body.dark-mode #domain-search {
+            background: #374151;
+            color: #F9FAFB;
+            border-color: #4a5568;
+        }
+
+        body.dark-mode .modal-content {
+            background: #374151;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <nav class="nav">
+            <button id="theme-toggle" aria-label="Toggle dark mode">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>
+            </button>
             <a href="/about">About</a>
         </nav>
         
@@ -162,6 +331,7 @@
             <div id="status-counter" class="status-counter">
                 <span id="online-count">0</span>/<span id="total-count">0</span> services online
             </div>
+            <button id="refresh-btn" class="refresh-button" title="Refresh all statuses">↻</button>
             <div class="category-filter">
                 <button data-category="all" class="active">All Services (180)</button>
                 <button data-category="critical">Critical (30)</button>
@@ -169,12 +339,32 @@
                 <button data-category="public">Public (60)</button>
                 <button data-category="states">States (30)</button>
             </div>
+            <div class="search-container">
+                <input type="text" id="domain-search" placeholder="Search domains...">
+                <div class="keyboard-hint">Press '/' to focus search</div>
+            </div>
+            <div class="progress-bar">
+                <div id="progress-bar-fill" class="progress-bar-fill"></div>
+            </div>
+        </div>
+        
+        <div class="chart-container">
+            <canvas id="status-chart"></canvas>
         </div>
         
         <div class="loader" id="loader">Checking services...</div>
         <div id="status-list"></div>
     </div>
 
+    <div id="domain-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="modal-domain"></h2>
+            <div id="modal-content"></div>
+        </div>
+    </div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 // Deduplicated domain lists
 const DOMAINS = {
@@ -231,65 +421,309 @@ const COUNTS = {
     all: [...new Set(Object.values(DOMAINS).flat())].length
 };
 
+// Domain descriptions for extra info
+const DOMAIN_INFO = {
+    'usa.gov': 'Official portal of the United States government',
+    'whitehouse.gov': 'Official website of the White House',
+    'cdc.gov': 'Centers for Disease Control and Prevention',
+    'irs.gov': 'Internal Revenue Service',
+    'ssa.gov': 'Social Security Administration',
+    'medicare.gov': 'Official Medicare website',
+    // Add more domain descriptions as needed
+};
+
 const STATUS_API = 'https://gov-status-tracker.vercel.app/api/check?url=';
 let activeDomains = [];
 let onlineCount = 0;
+let statusChart = null;
+const STATUS_HISTORY = {};
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+// Initialize theme based on saved preference
+if (localStorage.getItem('darkMode') === 'true' || 
+    window.matchMedia('(prefers-color-scheme: dark)').matches) {
+  document.body.classList.add('dark-mode');
+}
 
 function updateCounter() {
     document.getElementById('online-count').textContent = onlineCount;
     document.getElementById('total-count').textContent = activeDomains.length;
+    updateStatusChart();
+}
+
+function updateStatusHistory(domain, status) {
+    if (!STATUS_HISTORY[domain]) {
+        STATUS_HISTORY[domain] = [];
+    }
+    
+    STATUS_HISTORY[domain].push({
+        timestamp: new Date(),
+        status: status
+    });
+    
+    // Keep history limited to recent entries
+    if (STATUS_HISTORY[domain].length > 20) {
+        STATUS_HISTORY[domain].shift();
+    }
+}
+
+function getCachedStatus(domain) {
+    const cached = localStorage.getItem(`status_${domain}`);
+    if (!cached) return null;
+    
+    const { status, timestamp } = JSON.parse(cached);
+    if (Date.now() - timestamp > CACHE_DURATION) return null;
+    
+    return status;
+}
+
+function cacheStatus(domain, status) {
+    localStorage.setItem(`status_${domain}`, JSON.stringify({
+        status,
+        timestamp: Date.now()
+    }));
 }
 
 function createCard(domain) {
-    const card = document.createElement('a');
+    const card = document.createElement('div');
     card.className = 'status-card';
-    card.href = `https://${domain}`;
-    card.target = '_blank';
-    card.rel = 'noopener noreferrer';
+    card.dataset.domain = domain;
+    
+    // Check for cached status first
+    const cachedStatus = getCachedStatus(domain);
+    const statusClass = cachedStatus ? 
+        (cachedStatus === 'online' ? 'online' : 'offline') : 
+        'checking';
+    
+    const description = DOMAIN_INFO[domain] || '';
+    
     card.innerHTML = `
-        <div class="status-indicator checking"></div>
-        <div class="domain-name">${domain}</div>
-        <div class="last-checked">Checking...</div>
+        <div class="status-indicator ${statusClass}"></div>
+        <div class="status-details">
+            <div class="domain-name">${domain}</div>
+            ${description ? `<div class="domain-description">${description}</div>` : ''}
+        </div>
+        <div class="last-checked">${cachedStatus ? 'Cached' : 'Checking...'}</div>
     `;
+    
+    card.addEventListener('click', () => {
+        showDomainDetails(domain);
+    });
+    
     return card;
 }
+
+function showDomainDetails(domain) {
+    const modal = document.getElementById('domain-modal');
+    const modalDomain = document.getElementById('modal-domain');
+    const modalContent = document.getElementById('modal-content');
+    
+    modalDomain.textContent = domain;
+    
+    // Build status history display
+    let historyHTML = '<h3>Status History</h3>';
+    if (STATUS_HISTORY[domain] && STATUS_HISTORY[domain].length > 0) {
+        historyHTML += '<ul style="list-style-type: none; padding: 0;">';
+        STATUS_HISTORY[domain].slice().reverse().forEach(entry => {
+            const statusClass = entry.status === 'online' ? 'color: var(--online)' : 'color: var(--offline)';
+            historyHTML += `<li>
+                <span style="${statusClass}">●</span> 
+                ${entry.status.toUpperCase()} - 
+                ${new Date(entry.timestamp).toLocaleString()}
+            </li>`;
+        });
+        historyHTML += '</ul>';
+    } else {
+        historyHTML += '<p>No history available yet.</p>';
+    }
+    
+    // Add actions
+    historyHTML += `
+        <div style="margin-top: 1rem; display: flex; gap: 1rem; justify-content: center;">
+            <button id="visit-site" style="padding: 0.5rem 1rem; background: var(--primary); color: white; border: none; border-radius: 4px; cursor: pointer;">
+                Visit Website
+            </button>
+            <button id="check-now" style="padding: 0.5rem 1rem; background: #6B7280; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                Check Now
+            </button>
+        </div>
+    `;
+    
+    modalContent.innerHTML = historyHTML;
+    
+    // Add event listeners
+    document.getElementById('visit-site').addEventListener('click', () => {
+        window.open(`https://${domain}`, '_blank');
+    });
+    
+    document.getElementById('check-now').addEventListener('click', () => {
+        checkSingleDomain(domain);
+    });
+    
+    modal.style.display = 'block';
+}
+
+// Close modal when clicking the x
+document.querySelector('.close').addEventListener('click', () => {
+    document.getElementById('domain-modal').style.display = 'none';
+});
+
+// Close modal when clicking outside of it
+window.addEventListener('click', (event) => {
+    const modal = document.getElementById('domain-modal');
+    if (event.target === modal) {
+        modal.style.display = 'none';
+    }
+});
 
 async function checkDomain(domain) {
     try {
         const response = await fetch(`${STATUS_API}${encodeURIComponent(domain)}`);
+        if (!response.ok) throw new Error('API response not OK');
+        
         const data = await response.json();
-        return data.status === 'online';
+        const isOnline = data.status === 'online';
+        
+        // Cache the result
+        cacheStatus(domain, isOnline ? 'online' : 'offline');
+        
+        return {
+            isOnline,
+            statusCode: data.code || 0,
+            error: data.error || null
+        };
     } catch (error) {
-        return false;
+        console.error(`Error checking ${domain}:`, error);
+        return {
+            isOnline: false,
+            statusCode: 0, 
+            error: error.message
+        };
+    }
+}
+
+async function checkSingleDomain(domain) {
+    const card = document.querySelector(`.status-card[data-domain="${domain}"]`);
+    if (!card) return;
+    
+    // Set to checking state
+    card.querySelector('.status-indicator').className = 'status-indicator checking';
+    card.querySelector('.last-checked').textContent = 'Checking...';
+    
+    try {
+        const result = await checkDomain(domain);
+        const oldStatus = STATUS_HISTORY[domain]?.length > 0 ? 
+            STATUS_HISTORY[domain][STATUS_HISTORY[domain].length - 1].status : 
+            null;
+        
+        // Update status indicator
+        card.querySelector('.status-indicator').className = 
+            `status-indicator ${result.isOnline ? 'online' : 'offline'}`;
+        
+        // Update last checked time
+        card.querySelector('.last-checked').textContent = 
+            new Date().toLocaleTimeString();
+        
+        // Update history
+        updateStatusHistory(domain, result.isOnline ? 'online' : 'offline');
+        
+        // Notify if status changed
+        if (oldStatus && oldStatus !== (result.isOnline ? 'online' : 'offline')) {
+            notifyStatusChange(domain, result.isOnline ? 'online' : 'offline', oldStatus);
+        }
+        
+        // Update modal if open
+        const modal = document.getElementById('domain-modal');
+        if (modal.style.display === 'block' && document.getElementById('modal-domain').textContent === domain) {
+            showDomainDetails(domain);
+        }
+        
+    } catch (error) {
+        card.querySelector('.status-indicator').className = 'status-indicator offline';
+        card.querySelector('.last-checked').textContent = 'Error';
+        console.error(`Error checking ${domain}:`, error);
     }
 }
 
 async function checkDomains() {
     const loader = document.getElementById('loader');
     const container = document.getElementById('status-list');
+    const progressBar = document.getElementById('progress-bar-fill');
     loader.style.display = 'block';
     onlineCount = 0;
     
+    // Reset progress bar
+    progressBar.style.width = '0%';
+    
     const batchSize = 25;
     for(let i = 0; i < activeDomains.length; i += batchSize) {
+        // Update progress bar
+        progressBar.style.width = `${(i / activeDomains.length) * 100}%`;
+        
         const batch = activeDomains.slice(i, i + batchSize);
         await Promise.all(batch.map(async domain => {
-            const card = container.querySelector(`[href="https://${domain}"]`);
+            const card = container.querySelector(`.status-card[data-domain="${domain}"]`);
+            if (!card) return;
+            
             try {
-                const isOnline = await checkDomain(domain);
+                // Check for cached status first
+                const cachedStatus = getCachedStatus(domain);
+                if (cachedStatus) {
+                    card.querySelector('.status-indicator').className = 
+                        `status-indicator ${cachedStatus === 'online' ? 'online' : 'offline'}`;
+                    card.querySelector('.last-checked').textContent = 'Cached';
+                    if (cachedStatus === 'online') onlineCount++;
+                    updateStatusHistory(domain, cachedStatus);
+                    return;
+                }
+                
+                const result = await checkDomain(domain);
+                const oldStatus = STATUS_HISTORY[domain]?.length > 0 ? 
+                    STATUS_HISTORY[domain][STATUS_HISTORY[domain].length - 1].status : 
+                    null;
+                
                 card.querySelector('.status-indicator').className = 
-                    `status-indicator ${isOnline ? 'online' : 'offline'}`;
+                    `status-indicator ${result.isOnline ? 'online' : 'offline'}`;
                 card.querySelector('.last-checked').textContent = 
                     new Date().toLocaleTimeString();
-                if(isOnline) onlineCount++;
-            } catch {
+                
+                if(result.isOnline) onlineCount++;
+                
+                // Update history
+                updateStatusHistory(domain, result.isOnline ? 'online' : 'offline');
+                
+                // Notify if status changed
+                if (oldStatus && oldStatus !== (result.isOnline ? 'online' : 'offline')) {
+                    notifyStatusChange(domain, result.isOnline ? 'online' : 'offline', oldStatus);
+                }
+                
+            } catch (error) {
                 card.querySelector('.status-indicator').className = 'status-indicator offline';
+                card.querySelector('.last-checked').textContent = 'Error';
+                console.error(`Error checking ${domain}:`, error);
             }
             updateCounter();
         }));
     }
     
+    // Complete progress bar
+    progressBar.style.width = '100%';
+    setTimeout(() => {
+        progressBar.style.width = '0%';
+    }, 1000);
+    
     loader.style.display = 'none';
+}
+
+function notifyStatusChange(domain, newStatus, oldStatus) {
+    if (newStatus === oldStatus) return;
+    
+    if (Notification.permission === 'granted') {
+        new Notification(`Status Change: ${domain}`, {
+            body: `Status changed from ${oldStatus} to ${newStatus}`,
+            icon: '/favicon.ico'
+        });
+    }
 }
 
 function setCategory(category) {
@@ -299,12 +733,48 @@ function setCategory(category) {
         : DOMAINS[category];
     
     const container = document.getElementById('status-list');
-    container.innerHTML = activeDomains.map(domain => 
-        createCard(domain).outerHTML
-    ).join('');
+    container.innerHTML = '';
+    
+    activeDomains.forEach(domain => {
+        container.appendChild(createCard(domain));
+    });
     
     checkDomains();
     updateCounter();
+}
+
+function updateStatusChart() {
+    if (statusChart) {
+        statusChart.data.datasets[0].data = [onlineCount, activeDomains.length - onlineCount];
+        statusChart.update();
+        return;
+    }
+    
+    const ctx = document.getElementById('status-chart').getContext('2d');
+    statusChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Online', 'Offline'],
+            datasets: [{
+                data: [onlineCount, activeDomains.length - onlineCount],
+                backgroundColor: [
+                    getComputedStyle(document.documentElement).getPropertyValue('--online'),
+                    getComputedStyle(document.documentElement).getPropertyValue('--offline')
+                ],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            },
+            cutout: '70%'
+        }
+    });
 }
 
 // Initialize category buttons
@@ -322,6 +792,48 @@ document.querySelector('.category-filter button[data-category="critical"]').inne
 document.querySelector('.category-filter button[data-category="agencies"]').innerHTML = `Agencies (${COUNTS.agencies})`;
 document.querySelector('.category-filter button[data-category="public"]').innerHTML = `Public (${COUNTS.public})`;
 document.querySelector('.category-filter button[data-category="states"]').innerHTML = `States (${COUNTS.states})`;
+
+// Set up search functionality
+document.getElementById('domain-search').addEventListener('input', (e) => {
+    const searchTerm = e.target.value.toLowerCase();
+    document.querySelectorAll('.status-card').forEach(card => {
+        const domain = card.querySelector('.domain-name').textContent;
+        card.style.display = domain.toLowerCase().includes(searchTerm) ? 'grid' : 'none';
+    });
+});
+
+// Set up keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+    if (e.key === '/' && !e.ctrlKey && !e.metaKey) {
+        e.preventDefault();
+        document.getElementById('domain-search').focus();
+    }
+});
+
+// Set up refresh button
+document.getElementById('refresh-btn').addEventListener('click', () => {
+    // Clear cache for all domains to force fresh checks
+    activeDomains.forEach(domain => {
+        localStorage.removeItem(`status_${domain}`);
+    });
+    checkDomains();
+});
+
+// Request notification permission
+if (Notification.permission !== 'denied') {
+    Notification.requestPermission();
+}
+
+// Dark mode toggle
+document.getElementById('theme-toggle').addEventListener('click', () => {
+    document.body.classList.toggle('dark-mode');
+    localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
+    
+    // Update chart colors if needed
+    if (statusChart) {
+        statusChart.update();
+    }
+});
 
 setCategory('all');
 </script>
