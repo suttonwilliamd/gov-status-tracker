@@ -5,13 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>About - Gov Status Tracker</title>
     <style>
-        /* Keep existing styles from index.html */
+        :root {
+            --online: #10B981;
+            --offline: #EF4444;
+            --checking: #F59E0B;
+            --background: #F3F4F6;
+            --text-primary: #1F2937;
+            --text-secondary: #6B7280;
+            --primary: #1a73e8;
+        }
+
         body {
             font-family: 'Segoe UI', system-ui, sans-serif;
             margin: 0;
             padding: 2rem;
-            background: #F3F4F6;
-            color: #1F2937;
+            background: var(--background);
+            color: var(--text-primary);
             line-height: 1.6;
         }
 
@@ -23,12 +32,27 @@
         .nav {
             text-align: right;
             margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         .nav a {
-            color: #1a73e8;
+            color: var(--primary);
             text-decoration: none;
             font-weight: 500;
+        }
+
+        #theme-toggle {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-primary);
+            padding: 0.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .content {
@@ -36,18 +60,76 @@
             padding: 2rem;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .about-header {
             text-align: center;
+            margin-bottom: 2rem;
         }
 
         .donate-button {
             display: inline-block;
-            background: #1a73e8;
+            background: var(--primary);
             color: white !important;
             padding: 1rem 2rem;
             border-radius: 6px;
             text-decoration: none;
             margin: 2rem 0;
             font-weight: bold;
+            transition: all 0.2s ease;
+        }
+
+        .donate-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .features {
+            margin-top: 2rem;
+        }
+
+        .feature-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .feature-item {
+            background: rgba(26, 115, 232, 0.1);
+            padding: 1rem;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .stats {
+            margin-top: 2rem;
+            text-align: center;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .stat-item {
+            background: white;
+            padding: 1rem;
+            border-radius: 6px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
         }
 
         @media (prefers-color-scheme: dark) {
@@ -59,28 +141,140 @@
             .content {
                 background: #374151;
             }
+
+            .stat-item {
+                background: #2d3748;
+            }
+
+            .feature-item {
+                background: rgba(26, 115, 232, 0.15);
+            }
+        }
+
+        body.dark-mode {
+            background: #1F2937;
+            color: #F9FAFB;
+        }
+        
+        body.dark-mode .content {
+            background: #374151;
+        }
+
+        body.dark-mode .stat-item {
+            background: #2d3748;
+        }
+
+        body.dark-mode .feature-item {
+            background: rgba(26, 115, 232, 0.15);
         }
     </style>
 </head>
 <body>
     <div class="container">
         <nav class="nav">
+            <button id="theme-toggle" aria-label="Toggle dark mode">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>
+            </button>
             <a href="/">← Back to Status Monitor</a>
         </nav>
 
         <div class="content">
-            <h1>What's Up</h1>
-            <p>My name is William. I made this website in about 2 hours with help from DeepSeek R1 AI.</p>
-            <p>Currently living in my car - any donation helps keep this project alive.</p>
-            
-            <a href="https://ko-fi.com/suttonwilliamd" class="donate-button" target="_blank" rel="noopener">
-                Support via Ko-fi ☕
-            </a>
+            <div class="about-header">
+                <h1>About Gov Status Tracker</h1>
+                <p>A real-time monitoring tool for U.S. government digital services</p>
+            </div>
 
-            <p style="color: #6B7280; font-size: 0.9rem;">
-                (Service remains free for everyone)
-            </p>
+            <div>
+                <h2>What's This Project?</h2>
+                <p>My name is William. I created this website to provide a simple way to check if important government websites are operational. The project began as a quick experiment but has evolved into a tool that many people find useful during government shutdowns and service interruptions.</p>
+                
+                <p>Currently living in my car - any donation helps keep this project alive and servers running.</p>
+                
+                <div style="text-align: center;">
+                    <a href="https://ko-fi.com/suttonwilliamd" class="donate-button" target="_blank" rel="noopener">
+                        Support via Ko-fi ☕
+                    </a>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">
+                        (Service remains free for everyone)
+                    </p>
+                </div>
+            </div>
+
+            <div class="features">
+                <h2>Features</h2>
+                <div class="feature-list">
+                    <div class="feature-item">Real-time status checks</div>
+                    <div class="feature-item">180+ government domains</div>
+                    <div class="feature-item">Status history tracking</div>
+                    <div class="feature-item">Mobile friendly</div>
+                    <div class="feature-item">Dark mode support</div>
+                    <div class="feature-item">Search functionality</div>
+                </div>
+            </div>
+
+            <div class="stats" id="stats-section">
+                <h2>Service Statistics</h2>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-value" id="stat-total">180</div>
+                        <div class="stat-label">Total Services</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="stat-online">0</div>
+                        <div class="stat-label">Online</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="stat-critical">30</div>
+                        <div class="stat-label">Critical Services</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="stat-updated">-</div>
+                        <div class="stat-label">Last Updated</div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top: 2rem; text-align: center;">
+                <h2>How It Works</h2>
+                <p>The service checks each domain with a simple HEAD request, respecting rate limits and caching responses appropriately. All checks are performed server-side to ensure reliability and protection of user privacy.</p>
+                <p>This project was built with vanilla JavaScript and is hosted on Vercel.</p>
+                <p>Made with ❤️ and a bit of help from AI</p>
+            </div>
         </div>
     </div>
+
+<script>
+// Dark mode toggle
+document.getElementById('theme-toggle').addEventListener('click', () => {
+    document.body.classList.toggle('dark-mode');
+    localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
+});
+
+// Initialize theme based on saved preference
+if (localStorage.getItem('darkMode') === 'true' || 
+    window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    document.body.classList.add('dark-mode');
+}
+
+// Fetch latest stats if available
+function updateStats() {
+    const onlineCount = localStorage.getItem('onlineCount');
+    if (onlineCount) {
+        document.getElementById('stat-online').textContent = onlineCount;
+    }
+    
+    const lastChecked = localStorage.getItem('lastChecked');
+    if (lastChecked) {
+        document.getElementById('stat-updated').textContent = 
+            new Date(parseInt(lastChecked)).toLocaleTimeString();
+    } else {
+        document.getElementById('stat-updated').textContent = 'Not yet';
+    }
+}
+
+updateStats();
+</script>
 </body>
 </html>
