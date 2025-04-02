@@ -1,4 +1,3 @@
-// api/aggregate-history.js - Run daily with GitHub Actions (free)
 export default async () => {
   try {
     const thirtyDaysAgo = new Date();
